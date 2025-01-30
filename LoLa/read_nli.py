@@ -29,13 +29,16 @@ def snli_jsonl2dict(snli_dir, clean_labels=True, gold_labels=['entailment', 'neu
     label_set = set(gold_labels)
     # Reading part files one by one
     for s in PARTS:
+        problems_wo_gold_label = []
         weird_lab= {'cnt': Counter(), 'pids': []} # record problems with weird labels if any
         print("processing " + s.upper(), end=':\t')
         with open(op.join(snli_dir, f'snli_1.0_{s}.jsonl')) as F:
             for line in tqdm(F):
                 prob = json.loads(line)
                 # if problem's gold label is not in predefined gold labels, ignore
-                if prob['gold_label'] not in label_set: continue
+                if prob['gold_label'] not in label_set: 
+                    problems_wo_gold_label.append(prob['pairID'])
+                    continue
                 # test if the problem has weird labels
                 weird_labs = set(prob['annotator_labels']) - label_set
                 if weird_labs:
@@ -49,11 +52,13 @@ def snli_jsonl2dict(snli_dir, clean_labels=True, gold_labels=['entailment', 'neu
                 # update sentences annotations
                 sen2anno = update_sen2anno(sen2anno, prob['p'], p_anno, (s, prob['pid'], 'p'))
                 sen2anno = update_sen2anno(sen2anno, prob['h'], h_anno, (s, prob['pid'], 'h'))
-        print(f"{len(snli[s])} problems read")
-        print(f"{len(weird_lab['pids'])} problems have a wrong annotator label")
-    if weird_lab['cnt']:  
+        print(f"{len(problems_wo_gold_label)} problems without a gold label were ignored")
+        if clean_labels:
+            print(f"{len(weird_lab['pids'])} problems have a wrong annotator label")
+        print(f"{len(snli[s])} problems were returned")
+    if clean_labels and weird_lab['cnt']:  
         most_common_weird = ','.join([ f"/{k}/({c})" for k, c in weird_lab['cnt'].most_common() ])
-        print(f"Most common weird labels: {most_common_weird}")
+        print(f"Most common wrong annotator labels: {most_common_weird}")
     return snli, sen2anno
 
 
