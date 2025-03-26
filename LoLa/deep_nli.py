@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import typing
 import math
-from tqdm import tqdm
+from  tqdm.notebook import tqdm
 
 def get_gpu_info():
     """
