@@ -51,8 +51,10 @@ def batch_predict_nli(tokenizer, model, nli_list, batch_size=32, device=None):
     """
     start, predictions = 1, []
     batch_probs = nli_list[(start-1)*batch_size : start*batch_size]
+    total_batches = math.ceil(len(nli_list) / batch_size)
+    pbar = tqdm(total=total_batches, desc="Processing batches")
     while batch_probs:
-        print('.', end='')
+        pbar.update(1) 
         batch_probs_enc = tokenizer(batch_probs, padding=True, truncation=True, return_tensors="pt")
         batch_probs_enc = batch_probs_enc.to(device) if device else batch_probs_enc.to(model.device)
         out = model(**batch_probs_enc)
@@ -60,4 +62,5 @@ def batch_predict_nli(tokenizer, model, nli_list, batch_size=32, device=None):
         predictions += [ probs2prediction(probs, model.config.id2label) for probs in pred_prob_list ]
         start += 1
         batch_probs = nli_list[(start-1)*batch_size : start*batch_size]
+    pbar.close()
     return predictions
