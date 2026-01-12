@@ -7,8 +7,7 @@ from collections import Counter, defaultdict
 from tqdm import tqdm
 import copy
 
-########################################################################
-def snli_jsonl2dict(snli_dir, clean_labels=True, gold_labels=['entailment', 'neutral', 'contradiction']):
+def snli_jsonl2dict(snli_dir, type_dataset, regex_dictionary, datasets_acronyms, clean_labels=True, gold_labels=['entailment', 'neutral', 'contradiction']):
     """
     Reads jsonl files of snli parts and returns
     snli dict that contains problem level info: {part: {prob_id: Problem info}}
@@ -17,14 +16,18 @@ def snli_jsonl2dict(snli_dir, clean_labels=True, gold_labels=['entailment', 'neu
     many sentences reoccur in several problems.
     """
     # Find .jsonl files corresponding to data parts
-    PARTS = [ f[9:-6] for f in os.listdir(snli_dir) if re.match('.+_(train|dev|test).jsonl', f) ]
+
+    rgeex_file = regex_dictionary.get(type_dataset)
+    dataset_name_in_file=datasets_acronyms.get(type_dataset)
+    PARTS = [ f[9:-6] for f in os.listdir(snli_dir) if re.match(rgeex_file, f)]
+    print(PARTS)
     if not PARTS:
         raise RuntimeError(f"No .jsonl files were found in {snli_dir}")
     else:
         print(f"Found .json files for {PARTS} parts")
     # Initializing values
     snli = defaultdict(dict)
-    sen2anno = defaultdict(dict) # maps sentence strings to its annotations 
+    sen2anno = defaultdict(dict) # maps sentence strings to its annotations
     cleaned = 0
     label_set = set(gold_labels)
     # Reading part files one by one
@@ -32,11 +35,11 @@ def snli_jsonl2dict(snli_dir, clean_labels=True, gold_labels=['entailment', 'neu
         problems_wo_gold_label = []
         weird_lab= {'cnt': Counter(), 'pids': []} # record problems with weird labels if any
         print("processing " + s.upper(), end=':\t')
-        with open(op.join(snli_dir, f'snli_1.0_{s}.jsonl')) as F:
+        with open(op.join(snli_dir, f'{dataset_name_in_file}_{s}.jsonl')) as F:
             for line in tqdm(F):
                 prob = json.loads(line)
                 # if problem's gold label is not in predefined gold labels, ignore
-                if prob['gold_label'] not in label_set: 
+                if prob['gold_label'] not in label_set:
                     problems_wo_gold_label.append(prob['pairID'])
                     continue
                 # test if the problem has weird labels
@@ -44,7 +47,7 @@ def snli_jsonl2dict(snli_dir, clean_labels=True, gold_labels=['entailment', 'neu
                 if weird_labs:
                     weird_lab['cnt'].update(weird_labs)
                     weird_lab['pids'].append(prob['pairID'])
-                if clean_labels and weird_labs: 
+                if clean_labels and weird_labs:
                     continue # ignore problems with weird labels
                 # read a problem in a dict
                 prob, p_anno, h_anno = json_prob2dict(prob, labels=gold_labels)
@@ -56,11 +59,10 @@ def snli_jsonl2dict(snli_dir, clean_labels=True, gold_labels=['entailment', 'neu
         if clean_labels:
             print(f"{len(weird_lab['pids'])} problems have a wrong annotator label")
         print(f"{len(snli[s])} problems were returned")
-    if clean_labels and weird_lab['cnt']:  
+    if clean_labels and weird_lab['cnt']:
         most_common_weird = ','.join([ f"/{k}/({c})" for k, c in weird_lab['cnt'].most_common() ])
         print(f"Most common wrong annotator labels: {most_common_weird}")
     return snli, sen2anno
-
 
 ########################################################################
 def update_sen2anno(sen2anno, sen, sen_anno, part_id_ph):
