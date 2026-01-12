@@ -79,19 +79,23 @@ def update_sen2anno(sen2anno, sen, sen_anno, part_id_ph):
 ########################################################################
 def json_prob2dict(prob, labels=['entailment', 'neutral', 'contradiction']):
     """
-    Reprocess a prob dict and create a more informative dictionary 
+    Reprocess a prob dict and create a more informative dictionary
     that records easily accessible info for an NLI problems.
     Problem info is seperated from premise/hypothesis annotations.
     The problem info contains the following info:
-    a: authorlabel, g: gold label, pid: pair id, cid: caption ID, 
-    lnum: label number, lcnt: Counter of annotation labels, 
-    ltype: a string of three numbers corresponding to count of entailmen, neutral, contradiction annotations  
+    a: authorlabel, g: gold label, pid: pair id, cid: caption ID,
+    lnum: label number, lcnt: Counter of annotation labels,
+    ltype: a string of three numbers corresponding to count of entailmen, neutral, contradiction annotations
     h: hypothesis, p: premise.
     Premise and hypothesis annotation dict contain the info:
     tok: list of tokens in a sentence, pos: a list of pos tags of tokens,
-    tree: a phrase structure tree of a sentence, btree: a binary phrase structure tree of a sentence. 
+    tree: a phrase structure tree of a sentence, btree: a binary phrase structure tree of a sentence.
     """
     label_set = set(labels)
+    if 'captionID' not in prob.keys():
+        # print('yes')
+        prob['captionID'] = prob['promptID']
+
     p = { 'g':prob['gold_label'], 'pid':prob['pairID'], 'cid':prob['captionID'] }
     p['lnum'] = len([ l for l in prob['annotator_labels'] if l in label_set ])
     p['lcnt'] = Counter([ l for l in prob['annotator_labels'] if l in label_set ])
