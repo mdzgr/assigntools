@@ -94,6 +94,9 @@ def json_prob2dict(prob, labels=['entailment', 'neutral', 'contradiction']):
     tree: a phrase structure tree of a sentence, btree: a binary phrase structure tree of a sentence. 
     """
     label_set = set(labels)
+    if 'captionID' not in prob.keys():
+        # print('yes')
+        prob['captionID'] = prob['promptID']
     p = { 'g':prob['gold_label'], 'pid':prob['pairID'], 'cid':prob['captionID'] }
     p['lnum'] = len([ l for l in prob['annotator_labels'] if l in label_set ])
     p['lcnt'] = Counter([ l for l in prob['annotator_labels'] if l in label_set ])
