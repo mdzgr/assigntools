@@ -55,13 +55,13 @@ def snli_jsonl2dict(snli_dir, type_dataset, regex_dictionary, datasets_acronyms,
                 # update sentences annotations
                 sen2anno = update_sen2anno(sen2anno, prob['p'], p_anno, (s, prob['pid'], 'p'))
                 sen2anno = update_sen2anno(sen2anno, prob['h'], h_anno, (s, prob['pid'], 'h'))
-        print(f"{len(problems_wo_gold_label)} problems without a gold label were ignored")
+        #print(f"{len(problems_wo_gold_label)} problems without a gold label were ignored")
         if clean_labels:
             print(f"{len(weird_lab['pids'])} problems have a wrong annotator label")
-        print(f"{len(snli[s])} problems were returned")
+        #print(f"{len(snli[s])} problems were returned")
     if clean_labels and weird_lab['cnt']:
         most_common_weird = ','.join([ f"/{k}/({c})" for k, c in weird_lab['cnt'].most_common() ])
-        print(f"Most common wrong annotator labels: {most_common_weird}")
+        #print(f"Most common wrong annotator labels: {most_common_weird}")
     return snli, sen2anno
 
 ########################################################################
